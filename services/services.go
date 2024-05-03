@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"serviceRegistry/types"
 	"sync"
 )
 
@@ -13,16 +14,6 @@ type Registry struct {
 	mapMutex            sync.RWMutex
 }
 
-// Args Variable for Register service
-type Args struct {
-	IPAddress, PortNumber, ServiceName string
-}
-type Flag bool
-
-// Address Variable for getService service
-type Address string
-type ListOfServices map[string]string
-
 func NewRegistry() *Registry {
 	return &Registry{
 		AvailableServer:     make(map[string]string),
@@ -31,7 +22,7 @@ func NewRegistry() *Registry {
 	}
 }
 
-func (s *Registry) Register(args *Args, ret *Flag) error {
+func (s *Registry) Register(args *types.Args, ret *types.Flag) error {
 	s.mapMutex.Lock()
 	key := fmt.Sprintf("%s:%s", args.IPAddress, args.PortNumber) //All server are identified by IP and port number pairs
 	value := args.ServiceName
@@ -40,7 +31,7 @@ func (s *Registry) Register(args *Args, ret *Flag) error {
 	return nil
 }
 
-func (s *Registry) GetServices(loadBalancerIP Address, ret *ListOfServices) error {
+func (s *Registry) GetServices(loadBalancerIP types.GetServicesInput, ret *types.ListOfServices) error {
 	//Service registry save the load balancer address for update it when a sever crush
 	s.LoadBalancerAddress = string(loadBalancerIP)
 	fmt.Printf("Saved loadBalancerIP: %s\n", s.LoadBalancerAddress)
