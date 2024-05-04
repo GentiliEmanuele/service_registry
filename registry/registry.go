@@ -15,13 +15,20 @@ func main() {
 	port := os.Getenv("PORT")
 	playOnRegistry(port, registry)
 	idleServer := createIdleServerList(registry.AvailableServer)
+	errorCounter := 0
 	for {
 		for _, s := range idleServer {
-			conn, err := net.DialTimeout("tcp", s, 5*time.Second)
-			if conn != nil {
-				_ = conn.Close()
+			for wt := 1 * time.Second; wt <= 10*time.Second; wt += 1 * time.Second {
+				conn, err := net.DialTimeout("tcp", s, wt)
+				if conn != nil {
+					_ = conn.Close()
+					break
+				}
+				if err != nil {
+					errorCounter++
+				}
 			}
-			if err != nil {
+			if errorCounter >= 10 {
 				fmt.Printf("The server %s fail \n", s)
 				delete(registry.AvailableServer, s)
 			}
