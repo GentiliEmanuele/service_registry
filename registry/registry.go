@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/rpc"
 	"os"
@@ -32,6 +31,7 @@ func main() {
 				fmt.Printf("The server %s fail \n", s)
 				delete(registry.AvailableServer, s)
 			}
+			errorCounter = 0
 		}
 		//Update the available server list for load balancer
 		if len(registry.LoadBalancerAddress) != 0 {
@@ -62,20 +62,7 @@ func playOnRegistry(port string, registry *services.Registry) {
 	}
 	port = fmt.Sprintf(":%s", port)
 	lis, err := net.Listen("tcp", port)
-	fmt.Printf("The Register service listening on the port %s%s\n", GetOutboundIP().String(), port)
 	go server.Accept(lis)
-}
-
-func GetOutboundIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func(conn net.Conn) {
-		_ = conn.Close()
-	}(conn)
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP
 }
 
 func createIdleServerList(availableServer map[string]string) []string {
