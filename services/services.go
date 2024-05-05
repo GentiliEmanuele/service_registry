@@ -34,7 +34,6 @@ func (s *Registry) Register(args *types.Args, ret *types.Flag) error {
 func (s *Registry) GetServices(loadBalancerIP types.GetServicesInput, ret *types.ListOfServices) error {
 	//Service registry save the load balancer address for update it when a sever crush
 	s.LoadBalancerAddress = string(loadBalancerIP)
-	fmt.Printf("Saved loadBalancerIP: %s\n", s.LoadBalancerAddress)
 	*ret = s.AvailableServer
 	return nil
 }
