@@ -37,7 +37,6 @@ func main() {
 		if len(registry.LoadBalancerAddress) != 0 {
 			idleServer = updateLoadBalancer(registry.LoadBalancerAddress, registry.AvailableServer)
 		}
-		time.Sleep(1 * time.Second)
 	}
 }
 
