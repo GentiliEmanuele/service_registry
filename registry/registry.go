@@ -13,10 +13,10 @@ func main() {
 	registry := services.NewRegistry()
 	port := os.Getenv("PORT")
 	playOnRegistry(port, registry)
-	idleServer := createIdleServerList(registry.AvailableServer)
+	idleServer := registry.AvailableServer
 	errorCounter := 0
 	for {
-		for _, s := range idleServer {
+		for i, s := range idleServer {
 			for wt := 1 * time.Second; wt <= 10*time.Second; wt += 1 * time.Second {
 				conn, err := net.DialTimeout("tcp", s, wt)
 				if conn != nil {
@@ -29,7 +29,7 @@ func main() {
 			}
 			if errorCounter >= 10 {
 				fmt.Printf("The server %s fail \n", s)
-				delete(registry.AvailableServer, s)
+				registry.AvailableServer = append(registry.AvailableServer[:i], registry.AvailableServer[i+1:]...)
 			}
 			errorCounter = 0
 		}
@@ -41,7 +41,7 @@ func main() {
 	}
 }
 
-func updateLoadBalancer(loadBalancer string, updatedList map[string]string) []string {
+func updateLoadBalancer(loadBalancer string, updatedList []string) []string {
 	var idleServer []string
 	lb, err := rpc.Dial("tcp", loadBalancer)
 	if err != nil {
@@ -63,12 +63,4 @@ func playOnRegistry(port string, registry *services.Registry) {
 	port = fmt.Sprintf(":%s", port)
 	lis, err := net.Listen("tcp", port)
 	go server.Accept(lis)
-}
-
-func createIdleServerList(availableServer map[string]string) []string {
-	var idle = make([]string, 0)
-	for s := range availableServer {
-		idle = append(idle, s)
-	}
-	return idle
 }
