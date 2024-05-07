@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"net/rpc"
+	"os"
 	"serviceRegistry/types"
 	"sync"
 )
@@ -25,15 +27,19 @@ func NewRegistry() *Registry {
 func (s *Registry) Register(args *types.Args, ret *types.Flag) error {
 	s.mapMutex.Lock()
 	address := fmt.Sprintf("%s:%s", args.IPAddress, args.PortNumber) //All server are identified by IP and port number pairs
+	//Memorize the server
 	s.AvailableServer = append(s.AvailableServer, address)
+	//Send the new server to load balancer
+	s.LoadBalancerAddress = os.Getenv("LOAD_BALANCER")
+	loadBalancer, err := rpc.Dial("tcp", s.LoadBalancerAddress)
+	if err != nil {
+		fmt.Printf("An error occurred %s\n", err)
+	}
+	err = loadBalancer.Call("LoadBalancer.AddNewServer", address, &s.AvailableServer)
+	if err != nil {
+		fmt.Printf("An error occurred %s\n", err)
+	}
 	*ret = true
 	s.mapMutex.Unlock()
-	return nil
-}
-
-func (s *Registry) GetServices(loadBalancerIP types.GetServicesInput, ret *types.ListOfServer) error {
-	//Service registry save the load balancer address for update it when a sever crush
-	s.LoadBalancerAddress = string(loadBalancerIP)
-	*ret = s.AvailableServer
 	return nil
 }
